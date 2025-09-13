@@ -34,7 +34,7 @@ class Enroll(BaseModel):
     name: str
     cpf: str
     age: int
-    age_group: AgeGroup
+    age_group_id: str
     status: str
 
 
@@ -94,7 +94,7 @@ def create_enroll(enroll: EnrollCreateDTO):
         return {"error": "No suitable age group found"}, 400
 
     new_enroll = enrollCollection.insert_one(
-        {**enroll.model_dump(), "age_group": age_group, "status": "pending"}
+        {**enroll.model_dump(), "age_group_id": age_group["_id"], "status": "pending"}
     )
 
     message = messageCollection.insert_one({"enroll_id": str(new_enroll.inserted_id)})

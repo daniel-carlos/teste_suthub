@@ -19,17 +19,18 @@ class Message(BaseModel):
 
 
 def process_message(message: Message) -> bool:
-    print(f"Start processing message enroll_id: {message.enroll_id}...")
-    sleep(random.randint(1, 3))
-    rnd = random.randint(1, 10)
-    if rnd < 3:
-        print(f"Failed to process message for enroll_id: {message.enroll_id}")
-        return False
-
     enroll = enrollCollection.find_one({"_id": ObjectId(message.enroll_id)})
     if not enroll:
         print(f"Enroll with id {message.enroll_id} not found.")
         return False  # Consider as processed to remove from queue
+
+
+    print(f"Start processing message for {enroll['name']}...")
+    sleep(random.randint(2, 3))
+    rnd = random.randint(1, 10)
+    if rnd < 4:
+        print(f"Failed to process message for {enroll['name']}. Will retry later.")
+        return False
 
     new_status = ["granted", "denied"][random.randint(0, 1)]
     enrollCollection.update_one(
@@ -46,14 +47,16 @@ def main_loop():
         message = Message(enroll_id=msg["enroll_id"])
         if process_message(message):
             messageCollection.delete_one({"_id": msg["_id"]})
-            print(f"Message for enroll_id: {message.enroll_id} processed successfully.")
+            enroll = enrollCollection.find_one({"_id": ObjectId(message.enroll_id)})
+            print(f"Message for {enroll['name']} processed successfully.")
+        print("-")
 
 
 def run():
     while True:
         main_loop()
+        print(f"---\n\n")
         sleep(10)
-        print(f"\n\n---\n\n")
 
 
 if __name__ == "__main__":
