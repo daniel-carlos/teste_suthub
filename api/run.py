@@ -1,16 +1,137 @@
-from typing import Union
 from fastapi import FastAPI
-from tinydb import TinyDB, Query
+import pymongo
+from bson import ObjectId
 
+# SETUP ================================================================
 app = FastAPI()
+client = pymongo.MongoClient(
+    "mongodb://daniel:daniel@localhost:10260/?tls=true&tlsAllowInvalidCertificates=true"
+)
 
+enrollDatabase = client["enrollDatabase"]
+enrollCollection = enrollDatabase["enrollCollection"]
+ageGroupCollection = enrollDatabase["ageGroupCollection"]
+messageCollection = enrollDatabase["messageCollection"]
+
+# SCHEMA ===============================================================
+from pydantic import BaseModel
+
+
+class Enroll(BaseModel):
+    name: str
+    cpf: str
+    age: int
+
+
+class AgeGroup(BaseModel):
+    min_age: int
+    max_age: int
+    description: str
+
+
+# ENDPOINTS ============================================================
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+@app.get("/enroll/{enroll_id}")
+def get_enroll(enroll_id: str):
+    try:
+        # Convert string to ObjectId for MongoDB query
+        object_id = ObjectId(enroll_id)
+        enroll = enrollCollection.find_one({"_id": object_id})
+        if enroll:
+            enroll["_id"] = str(enroll["_id"])
+            return {"enroll": enroll}
+        return {"error": "Enroll not found"}, 404
+    except Exception as e:
+        return {"error": f"Invalid ID format: {str(e)}"}, 400
 
-db = TinyDB('db.json')
+
+@app.get("/enroll")
+def list_enrolls():
+    enrolls = enrollCollection.find()
+    enrolls = list(enrolls)
+    # Convert ObjectId to string for JSON serialization
+    for enroll in enrolls:
+        enroll["_id"] = str(enroll["_id"])
+    return {"enrolls": enrolls}
+
+
+@app.post("/enroll")
+def create_enroll(enroll: Enroll):
+    enrollCollection.insert_one(enroll.model_dump())
+    return enroll
+
+
+@app.put("/enroll/{enroll_id}")
+def update_enroll(enroll_id: str, enroll: Enroll):
+    try:
+        # Convert string to ObjectId for MongoDB query
+        object_id = ObjectId(enroll_id)
+        result = enrollCollection.update_one({"_id": object_id}, {"$set": enroll.model_dump()})
+        return {
+            "modified_count": result.modified_count,
+            "matched_count": result.matched_count,
+        }
+    except Exception as e:
+        return {"error": f"Invalid ID format: {str(e)}"}, 400
+
+
+@app.get("/age-groups")
+def list_age_groups():
+    age_groups = ageGroupCollection.find()
+    age_groups = list(age_groups)
+    # Convert ObjectId to string for JSON serialization
+    for age_group in age_groups:
+        age_group["_id"] = str(age_group["_id"])
+    return {"age_groups": age_groups}
+
+
+@app.post("/age-groups")
+def create_age_group(age_group: AgeGroup):
+    ageGroupCollection.insert_one(age_group.model_dump())
+    return age_group
+
+
+@app.put("/age-groups/{age_group_id}")
+def update_age_group(age_group_id: str, age_group: AgeGroup):
+    try:
+        # Convert string to ObjectId for MongoDB query
+        object_id = ObjectId(age_group_id)
+        result = ageGroupCollection.update_one(
+            {"_id": object_id}, {"$set": age_group.model_dump()}
+        )
+        return {
+            "modified_count": result.modified_count,
+            "matched_count": result.matched_count,
+        }
+    except Exception as e:
+        return {"error": f"Invalid ID format: {str(e)}"}, 400
+
+
+@app.delete("/enroll/{enroll_id}")
+def delete_enroll(enroll_id: str):
+    try:
+        # Convert string to ObjectId for MongoDB query
+        object_id = ObjectId(enroll_id)
+        result = enrollCollection.delete_one({"_id": object_id})
+        if result.deleted_count == 1:
+            return {"message": "Enroll deleted successfully"}
+        return {"error": "Enroll not found"}, 404
+    except Exception as e:
+        return {"error": f"Invalid ID format: {str(e)}"}, 400
+
+
+@app.delete("/age-groups/{age_group_id}")
+def delete_age_group(age_group_id: str):
+    try:
+        # Convert string to ObjectId for MongoDB query
+        object_id = ObjectId(age_group_id)
+        result = ageGroupCollection.delete_one({"_id": object_id})
+        if result.deleted_count == 1:
+            return {"message": "Age group deleted successfully"}
+        return {"error": "Age group not found"}, 404
+    except Exception as e:
+        return {"error": f"Invalid ID format: {str(e)}"}, 400
