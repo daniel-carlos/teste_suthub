@@ -1,6 +1,13 @@
+import os
 from fastapi import FastAPI
 import pymongo
 from bson import ObjectId
+from dotenv import load_dotenv
+
+load_dotenv()
+
+_secret = os.getenv("SECRET")
+_webhook_url = os.getenv("WEBHOOK_URL")
 
 # SETUP ================================================================
 app = FastAPI()
@@ -17,16 +24,34 @@ messageCollection = enrollDatabase["messageCollection"]
 from pydantic import BaseModel
 
 
+class AgeGroup(BaseModel):
+    min_age: int
+    max_age: int
+    description: str
+
+
 class Enroll(BaseModel):
+    name: str
+    cpf: str
+    age: int
+    age_group: AgeGroup
+    status: str
+
+
+class EnrollCreateDTO(BaseModel):
     name: str
     cpf: str
     age: int
 
 
-class AgeGroup(BaseModel):
-    min_age: int
-    max_age: int
-    description: str
+class EnrollUpdateDTO(BaseModel):
+    name: str | None = None
+    cpf: str | None = None
+    age: int | None = None
+
+
+class Message(BaseModel):
+    enroll_id: str
 
 
 # ENDPOINTS ============================================================
@@ -60,17 +85,31 @@ def list_enrolls():
 
 
 @app.post("/enroll")
-def create_enroll(enroll: Enroll):
-    enrollCollection.insert_one(enroll.model_dump())
-    return enroll
+def create_enroll(enroll: EnrollCreateDTO):
+    age_group = ageGroupCollection.find_one(
+        {"min_age": {"$lte": enroll.age}, "max_age": {"$gte": enroll.age}}
+    )
+
+    if not age_group:
+        return {"error": "No suitable age group found"}, 400
+
+    new_enroll = enrollCollection.insert_one(
+        {**enroll.model_dump(), "age_group": age_group, "status": "pending"}
+    )
+
+    message = messageCollection.insert_one({"enroll_id": str(new_enroll.inserted_id)})
+
+    return {"id": str(new_enroll.inserted_id)}
 
 
 @app.put("/enroll/{enroll_id}")
-def update_enroll(enroll_id: str, enroll: Enroll):
+def update_enroll(enroll_id: str, enroll: EnrollUpdateDTO):
     try:
         # Convert string to ObjectId for MongoDB query
         object_id = ObjectId(enroll_id)
-        result = enrollCollection.update_one({"_id": object_id}, {"$set": enroll.model_dump()})
+        result = enrollCollection.update_one(
+            {"_id": object_id}, {"$set": enroll.model_dump()}
+        )
         return {
             "modified_count": result.modified_count,
             "matched_count": result.matched_count,
