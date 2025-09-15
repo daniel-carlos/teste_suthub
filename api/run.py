@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import pymongo
 from bson import ObjectId
 from dotenv import load_dotenv
@@ -34,7 +34,7 @@ class Enroll(BaseModel):
     name: str
     cpf: str
     age: int
-    age_group_id: str
+    age_group: AgeGroup
     status: str
 
 
@@ -42,7 +42,6 @@ class EnrollCreateDTO(BaseModel):
     name: str
     cpf: str
     age: int
-
 
 class EnrollUpdateDTO(BaseModel):
     name: str | None = None
@@ -57,6 +56,7 @@ class Message(BaseModel):
 # UTILS ================================================================
 from bson import json_util
 import json
+
 
 def parse_json(data):
     return json.loads(json_util.dumps(data))
@@ -88,8 +88,6 @@ def list_enrolls():
     enrolls = enrollCollection.find()
     enrolls = list(enrolls)
     # Convert ObjectId to string for JSON serialization
-    for enroll in enrolls:
-        enroll["_id"] = str(enroll["_id"])
     return {"enrolls": parse_json(enrolls)}
 
 
@@ -100,10 +98,10 @@ def create_enroll(enroll: EnrollCreateDTO):
     )
 
     if not age_group:
-        return {"error": "No suitable age group found"}, 400
+        raise HTTPException(status_code=400, detail="No age group found for this age")
 
     new_enroll = enrollCollection.insert_one(
-        {**enroll.model_dump(), "age_group_id": age_group["_id"], "status": "pending"}
+        {**enroll.model_dump(), "age_group": age_group, "status": "pending"}
     )
 
     message = messageCollection.insert_one({"enroll_id": str(new_enroll.inserted_id)})
