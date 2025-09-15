@@ -101,4 +101,4 @@ api/db.json
 
 
 # Ignore Tests
-_tests/
+_test/
