@@ -11,7 +11,7 @@ Guia rápido para executar o projeto localmente (sem Docker) e com Docker Compos
 
 ## 1) Clonar o repositório
 ```cmd
-git clone <URL_DO_REPOSITORIO>
+git clone https://github.com/daniel-carlos/teste_suthub.git
 cd teste_suthub
 ```
 
