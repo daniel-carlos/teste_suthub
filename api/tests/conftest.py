@@ -9,6 +9,7 @@ import mongomock
 import pymongo
 import pytest
 from fastapi.testclient import TestClient
+from bson import ObjectId
 
 # adiciona a raiz do repo ao sys.path
 ROOT = Path(__file__).resolve().parents[2]
@@ -19,6 +20,20 @@ pymongo.MongoClient = mongomock.MongoClient  # type: ignore[attr-defined]
 
 # importe sua FastAPI app
 from api.run import app  # ajuste se a app estiver em outro módulo
+
+# Garante isolamento entre testes limpando as coleções a cada teste
+@pytest.fixture(autouse=True)
+def _clear_db_between_tests():
+    # Como o app usa mongomock (patchado acima), podemos apagar tudo com delete_many
+    try:
+        from api import run as app_module
+
+        app_module.ageGroupCollection.delete_many({})
+        app_module.enrollCollection.delete_many({})
+        app_module.messageCollection.delete_many({})
+    except Exception:
+        # Em caso de qualquer problema, não impedir a execução do teste
+        pass
 
 
 @dataclass
@@ -89,6 +104,22 @@ class FakeCollection:
                 del self.docs[i]
                 return _DeleteResult(deleted_count=1)
         return _DeleteResult(deleted_count=0)
+
+    def delete_many(self, filter: Optional[Dict[str, Any]] = None):
+        if not filter:
+            count = len(self.docs)
+            self.docs.clear()
+            return _DeleteResult(deleted_count=count)
+        # Basic support for equality on _id
+        to_keep = []
+        deleted = 0
+        for d in self.docs:
+            if self._match_filter(d, filter):
+                deleted += 1
+            else:
+                to_keep.append(d)
+        self.docs = to_keep
+        return _DeleteResult(deleted_count=deleted)
 
 
 class FakeDB:
