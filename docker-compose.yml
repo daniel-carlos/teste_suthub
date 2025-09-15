@@ -13,6 +13,8 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
+    depends_on:
+      - mongo
 
   queue_system:
     build:
@@ -22,3 +24,20 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=daniel
+      - MONGO_INITDB_ROOT_PASSWORD=daniel
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongo_data:

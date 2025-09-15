@@ -12,7 +12,7 @@ _webhook_url = os.getenv("WEBHOOK_URL")
 # SETUP ================================================================
 app = FastAPI()
 client = pymongo.MongoClient(
-    "mongodb://daniel:daniel@localhost:10260/?tls=true&tlsAllowInvalidCertificates=true"
+    "mongodb://daniel:daniel@mongo:27017/?authSource=admin&tlsAllowInvalidCertificates=true"
 )
 
 enrollDatabase = client["enrollDatabase"]

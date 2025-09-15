@@ -6,7 +6,7 @@ from bson import ObjectId
 from dotenv import load_dotenv
 
 client = pymongo.MongoClient(
-    "mongodb://daniel:daniel@localhost:10260/?tls=true&tlsAllowInvalidCertificates=true"
+    "mongodb://daniel:daniel@mongo:27017/?authSource=admin&tlsAllowInvalidCertificates=true"
 )
 
 enrollDatabase = client["enrollDatabase"]
