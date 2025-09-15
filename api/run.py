@@ -54,6 +54,14 @@ class Message(BaseModel):
     enroll_id: str
 
 
+# UTILS ================================================================
+from bson import json_util
+import json
+
+def parse_json(data):
+    return json.loads(json_util.dumps(data))
+
+
 # ENDPOINTS ============================================================
 @app.get("/")
 def read_root():
@@ -67,8 +75,9 @@ def get_enroll(enroll_id: str):
         object_id = ObjectId(enroll_id)
         enroll = enrollCollection.find_one({"_id": object_id})
         if enroll:
-            enroll["_id"] = str(enroll["_id"])
-            return {"enroll": enroll}
+            # enroll["_id"] = str(enroll["_id"])
+            # enroll["age_group_id"] = str(enroll["age_group_id"])
+            return {"enroll": parse_json(enroll)}
         return {"error": "Enroll not found"}, 404
     except Exception as e:
         return {"error": f"Invalid ID format: {str(e)}"}, 400
@@ -81,7 +90,7 @@ def list_enrolls():
     # Convert ObjectId to string for JSON serialization
     for enroll in enrolls:
         enroll["_id"] = str(enroll["_id"])
-    return {"enrolls": enrolls}
+    return {"enrolls": parse_json(enrolls)}
 
 
 @app.post("/enroll")
