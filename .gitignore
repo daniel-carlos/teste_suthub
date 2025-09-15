@@ -98,7 +98,3 @@ Desktop.ini
 
 # Ignore API data
 api/db.json
-
-
-# Ignore Tests
-_test/

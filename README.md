@@ -87,15 +87,6 @@ python run.py
 ```
 O processo lerá mensagens da coleção `messageCollection` e atualizará os cadastros.
 
-### 4.4) Popular dados (opcional)
-Com a API rodando, execute os scripts de seed a partir da raiz do projeto:
-```cmd
-python -m pip install requests faker
-python _test\seed_age_group.py
-python _test\seed.py 5
-```
-O primeiro cria faixas etárias; o segundo cria inscrições aleatórias.
-
 ---
 
 ## 5) Testes com pytest
