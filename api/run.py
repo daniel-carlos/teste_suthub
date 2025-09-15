@@ -163,6 +163,7 @@ def delete_enroll(enroll_id: str):
         # Convert string to ObjectId for MongoDB query
         object_id = ObjectId(enroll_id)
         result = enrollCollection.delete_one({"_id": object_id})
+        print(f"\n\n\n======================================\n{ageGroupCollection.find()}\n\n\n")
         if result.deleted_count == 1:
             return {"message": "Enroll deleted successfully"}
         return {"error": "Enroll not found"}, 404
