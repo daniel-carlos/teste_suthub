@@ -54,7 +54,7 @@ docker compose down
 
 ---
 
-## 4) Rodando localmente (sem Docker)
+## 4) Rodando local (sem Docker)
 ### 4.1) Subir o MongoDB
 Opção recomendada (usar Docker apenas para o Mongo):
 ```cmd
@@ -137,3 +137,37 @@ pytest -v
 ## Observações
 - Se a API não conectar no Mongo, verifique se o Mongo está ativo em `localhost:27017` (execução local) ou se os serviços do Compose estão de pé.
 - No Docker Compose, os serviços usam `DB_HOST=mongo` automaticamente e dependem do serviço `mongo`.
+
+## Autenticação simples
+
+Autenticação apenas para as rotas de gerenciamento de `age_groups` (POST/PUT/DELETE).
+
+- As credenciais ficam em `api/credentials.json` no formato:
+
+```
+{
+  "users": [
+    { "username": "admin", "password": "admin", "token": "secreta-palavra" }
+  ]
+}
+```
+
+- Faça login em `POST /auth/login` com:
+
+```
+{ "username": "admin", "password": "admin" }
+```
+
+Resposta:
+
+```
+{ "token": "secreta-palavra" }
+```
+
+- Para criar/atualizar/apagar age groups envie o header:
+
+```
+X-Token: secreta-palavra
+```
+
+As rotas de leitura (GET) e as demais entidades continuam abertas.

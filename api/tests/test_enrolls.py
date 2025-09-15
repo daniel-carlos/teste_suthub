@@ -1,7 +1,14 @@
+def _login(client):
+    r = client.post("/auth/login", json={"username": "admin", "password": "admin"})
+    assert r.status_code == 200
+    return r.json()["token"]
+
+
 def _seed_age_groups(client):
-    client.post("/age-groups", json={"min_age": 0, "max_age": 12, "description": "child"})
-    client.post("/age-groups", json={"min_age": 13, "max_age": 17, "description": "teen"})
-    client.post("/age-groups", json={"min_age": 18, "max_age": 64, "description": "adult"})
+    token = _login(client)
+    client.post("/age-groups", json={"min_age": 0, "max_age": 12, "description": "child"}, headers={"X-Token": token})
+    client.post("/age-groups", json={"min_age": 13, "max_age": 17, "description": "teen"}, headers={"X-Token": token})
+    client.post("/age-groups", json={"min_age": 18, "max_age": 64, "description": "adult"}, headers={"X-Token": token})
 
 
 def test_root(client):

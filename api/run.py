@@ -1,8 +1,9 @@
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Header
 import pymongo
 from bson import ObjectId
 from dotenv import load_dotenv
+from typing import Optional
 
 load_dotenv()
 
@@ -63,6 +64,52 @@ import json
 
 def parse_json(data):
     return json.loads(json_util.dumps(data))
+
+class LoginDTO(BaseModel):
+    username: str
+    password: str
+
+AUTH_CREDENTIALS_FILE = os.path.join(os.path.dirname(__file__), "credentials.json")
+
+
+def _load_credentials() -> dict:
+    try:
+        with open(AUTH_CREDENTIALS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {"users": []}
+
+
+def _find_user(username: str, password: str) -> Optional[dict]:
+    creds = _load_credentials()
+    for u in creds.get("users", []):
+        if u.get("username") == username and u.get("password") == password:
+            return u
+    return None
+
+
+def _token_is_valid(token: Optional[str]) -> bool:
+    if not token:
+        return False
+    creds = _load_credentials()
+    for u in creds.get("users", []):
+        if u.get("token") == token:
+            return True
+    return False
+
+
+def require_token(x_token: Optional[str] = Header(None, alias="X-Token")):
+    if not _token_is_valid(x_token):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+@app.post("/auth/login")
+def login(body: LoginDTO):
+    user = _find_user(body.username, body.password)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    # Return the static secret word (token) for this user
+    return {"token": user.get("token")}
 
 
 # ENDPOINTS ============================================================
@@ -139,13 +186,13 @@ def list_age_groups():
 
 
 @app.post("/age-groups")
-def create_age_group(age_group: AgeGroup):
+def create_age_group(age_group: AgeGroup, _=Depends(require_token)):
     ageGroupCollection.insert_one(age_group.model_dump())
     return age_group
 
 
 @app.put("/age-groups/{age_group_id}")
-def update_age_group(age_group_id: str, age_group: AgeGroup):
+def update_age_group(age_group_id: str, age_group: AgeGroup, _=Depends(require_token)):
     try:
         # Convert string to ObjectId for MongoDB query
         object_id = ObjectId(age_group_id)
@@ -175,7 +222,7 @@ def delete_enroll(enroll_id: str):
 
 
 @app.delete("/age-groups/{age_group_id}")
-def delete_age_group(age_group_id: str):
+def delete_age_group(age_group_id: str, _=Depends(require_token)):
     try:
         # Convert string to ObjectId for MongoDB query
         object_id = ObjectId(age_group_id)
