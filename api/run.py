@@ -154,7 +154,7 @@ def update_age_group(age_group_id: str, age_group: AgeGroup):
             "matched_count": result.matched_count,
         }
     except Exception as e:
-        return {"error": f"Invalid ID format: {str(e)}"}, 400
+        return HTTPException(status_code=400, detail=f"Invalid ID format: {str(e)}")
 
 
 @app.delete("/enroll/{enroll_id}")
