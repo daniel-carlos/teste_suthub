@@ -6,9 +6,9 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar arquivos de dependências (se existir)
-# COPY requirements.txt .
-# RUN pip install --no-cache-dir -r requirements.txt
+# Copiar e instalar dependências Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código da aplicação
 COPY . .
