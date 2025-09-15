@@ -98,6 +98,35 @@ O primeiro cria faixas etárias; o segundo cria inscrições aleatórias.
 
 ---
 
+## 5) Testes com pytest
+Os testes estão em `api/tests` e usam `mongomock`, então NÃO é necessário ter MongoDB ou Docker rodando.
+
+### Instalar dependências de teste e executar
+```cmd
+cd api
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+pip install pytest mongomock
+pytest -q
+```
+
+### Executar um arquivo ou teste específico
+```cmd
+# Arquivo específico
+pytest -q tests\test_age_groups.py
+
+# Mostrar prints/logs durante os testes
+pytest -q -s
+```
+
+### Saída detalhada (verbose)
+```cmd
+pytest -v
+```
+
+---
+
 ## Endpoints úteis
 - GET `http://localhost:8000/` — health check simples
 - GET `http://localhost:8000/age-groups`
