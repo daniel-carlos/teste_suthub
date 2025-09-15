@@ -129,11 +129,11 @@ pytest -v
 - Se a API não conectar no Mongo, verifique se o Mongo está ativo em `localhost:27017` (execução local) ou se os serviços do Compose estão de pé.
 - No Docker Compose, os serviços usam `DB_HOST=mongo` automaticamente e dependem do serviço `mongo`.
 
-## Autenticação simples
+## Autenticação
 
-Autenticação apenas para as rotas de gerenciamento de `age_groups` (POST/PUT/DELETE).
+Autenticação para as rotas de gerenciamento.
 
-- As credenciais ficam em `api/credentials.json` no formato:
+- As credenciais ficam no arquivo `api/credentials.json` no formato:
 
 ```
 {
@@ -162,3 +162,10 @@ X-Token: secreta-palavra
 ```
 
 As rotas de leitura (GET) e as demais entidades continuam abertas.
+
+## Arquivos usados para o desenvolvimento
+A pasta `_tests` contém dois arquivos que criei para facilitar o desenvolvimento e irão facilitar os testes:
+- **seed_age_group.py**: cria 3 age_groups
+- **seed.py**: cria enrolls em larga escala (passe um argumento informando a quantidade `python seed.py 7` para criar 7 enrolls ou deixe vazio para criar uma quantidade aleatória de enrolls entre 2 a 8)
+
+> Importante: para rodar os arquivos, o serviço `api` precisa estar rodando
