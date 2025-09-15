@@ -6,13 +6,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-_secret = os.getenv("SECRET")
-_webhook_url = os.getenv("WEBHOOK_URL")
+_user = os.getenv("DB_USERNAME")
+_password = os.getenv("DB_PASSWORD")
+_host = os.getenv("DB_HOST")
+
+print(f"DB_USER: {_user}, DB_HOST: {_host}")
 
 # SETUP ================================================================
 app = FastAPI()
 client = pymongo.MongoClient(
-    "mongodb://daniel:daniel@mongo:27017/?authSource=admin&tlsAllowInvalidCertificates=true"
+    f"mongodb://{_user}:{_password}@{_host}:27017/?authSource=admin&tlsAllowInvalidCertificates=true"
 )
 
 enrollDatabase = client["enrollDatabase"]

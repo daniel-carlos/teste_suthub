@@ -6,12 +6,17 @@ services:
       context: ./api
       dockerfile: Dockerfile
     container_name: api
+    env_file:
+      - ./api/.env
     ports:
       - "8000:8000"
     volumes:
       - ./api/db.json:/app/db.json
     environment:
       - PYTHONUNBUFFERED=1
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=mongo
     restart: unless-stopped
     depends_on:
       - mongo
@@ -21,8 +26,13 @@ services:
       context: ./queue_system
       dockerfile: Dockerfile
     container_name: queue_system
+    env_file:
+      - ./queue_system/.env
     environment:
       - PYTHONUNBUFFERED=1
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=mongo
     restart: unless-stopped
     depends_on:
       - mongo

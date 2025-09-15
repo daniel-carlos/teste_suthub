@@ -1,3 +1,4 @@
+import os
 import random
 from time import sleep
 from pydantic import BaseModel
@@ -5,8 +6,16 @@ import pymongo
 from bson import ObjectId
 from dotenv import load_dotenv
 
+load_dotenv()
+
+_user = os.getenv("DB_USERNAME")
+_password = os.getenv("DB_PASSWORD")
+_host = os.getenv("DB_HOST")
+
+print(f"DB_USER: {_user}, DB_HOST: {_host}")
+
 client = pymongo.MongoClient(
-    "mongodb://daniel:daniel@mongo:27017/?authSource=admin&tlsAllowInvalidCertificates=true"
+    f"mongodb://{_user}:{_password}@{_host}:27017/?authSource=admin&tlsAllowInvalidCertificates=true"
 )
 
 enrollDatabase = client["enrollDatabase"]

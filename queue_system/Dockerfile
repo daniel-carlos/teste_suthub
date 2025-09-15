@@ -12,6 +12,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código da aplicação
 COPY . .
+# Copiar o .env para dentro da imagem (cuidado: evita incluir segredos)
+COPY .env ./
 
 # Comando para executar a aplicação
 CMD ["python", "run.py"]

@@ -14,6 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código da aplicação
 COPY . .
+# Copiar o .env para dentro da imagem (cuidado: evita incluir segredos)
+COPY .env ./
 
 # Expor a porta
 EXPOSE 8000
